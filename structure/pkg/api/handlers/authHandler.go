@@ -4,7 +4,6 @@ import (
 	"example/backend/pkg/controllers"
 	"example/backend/pkg/database/models"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -60,22 +59,19 @@ func SignIn(c *gin.Context) {
 	// check if user exists via email
 	if controllers.UserExists(newUser.Email) {
 		user := controllers.GetUserByEmail(newUser.Email)
+		// if user exists, check password
 		if user != nil {
-			// if user exists, check password
-			// hashedPassword, err := controllers.HashPassword(newUser.Password)
-			// if err != nil {
-			// 	c.JSON(http.StatusInternalServerError, gin.H{
-			// 		"message": "Error hashing password",
-			// 	})
-			// 	return
-			// }
 			// compare password
 			if controllers.CheckPasswordHash(newUser.Password, user.Password) {
 				// create authentication token
+				accessToken := controllers.GenerateAccessToken(user.ID)
+				// create refresh token
+				refreshToken := controllers.GenerateRefreshToken(user.ID)
+				// send response
 				c.JSON(http.StatusOK, gin.H{
 					"message":       "User signed in successfully",
-					"access_token":  "access_token",
-					"refresh_token": "refresh_token",
+					"access_token":  accessToken,
+					"refresh_token": refreshToken,
 				})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{
